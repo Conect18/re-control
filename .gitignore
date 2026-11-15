@@ -10,6 +10,8 @@
 !.yarn/releases
 !.yarn/versions
 
+#Esto evita que tus contraseñas se suban a GitHub.
+.env.local
 # testing
 /coverage
 

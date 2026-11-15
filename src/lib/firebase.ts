@@ -4,15 +4,14 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAqwD5-9HOUdUZFdMh2_idLh7IQbpKG_XQ",
-  authDomain: "re-control-tacuarembo.firebaseapp.com",
-  projectId: "re-control-tacuarembo",
-  storageBucket: "re-control-tacuarembo.firebasestorage.app",
-  messagingSenderId: "413345633868",
-  appId: "1:413345633868:web:e9b2ffc881cea4566086e0"
+  apiKey: process.env.AIzaSyAqwD5-9HOUdUZFdMh2_idLh7IQbpKG_XQ,
+  authDomain: process.env.re-control-tacuarembo.firebaseapp.com,
+  projectId: process.env."re-control-tacuarembo",
+  storageBucket: process.env.re-control-tacuarembo.firebasestorage.app,
+  messagingSenderId: process.env.413345633868,
+  appId: process.env.1:413345633868:web:e9b2ffc881cea4566086e0
 };
 
-// Inicializar Firebase (evitando duplicados en Next.js)
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
