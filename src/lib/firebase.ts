@@ -1,15 +1,14 @@
-// src/lib/firebase.ts
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: process.env.AIzaSyAqwD5-9HOUdUZFdMh2_idLh7IQbpKG_XQ,
-  authDomain: process.env.re-control-tacuarembo.firebaseapp.com,
-  projectId: process.env."re-control-tacuarembo",
-  storageBucket: process.env.re-control-tacuarembo.firebasestorage.app,
-  messagingSenderId: process.env.413345633868,
-  appId: process.env.1:413345633868:web:e9b2ffc881cea4566086e0
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
