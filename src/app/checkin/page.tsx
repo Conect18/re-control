@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Save, Eraser, ArrowLeft, User, Calendar, Phone, Users } from "lucide-react";
+import { Save, Eraser, ArrowLeft, User, Calendar, Phone, Users, Home } from "lucide-react";
 import Link from "next/link";
 
 export default function CheckIn() {
@@ -36,6 +36,7 @@ export default function CheckIn() {
     const formData = new FormData(form);
     
     const nuevoHuesped = {
+      // Alojamiento
       piso: formData.get("piso"),
       habitacion: formData.get("habitacion"),
       cama: formData.get("cama"),
@@ -46,6 +47,7 @@ export default function CheckIn() {
       saldoPendiente: saldoPendiente,
       estadoPago: estadoPago,
       fechaUltimoPago: montoPagado > 0 ? new Date().toISOString() : "",
+      // Personales
       nombre: formData.get("nombre"),
       documento: formData.get("documento"),
       nacionalidad: formData.get("nacionalidad"),
@@ -53,10 +55,12 @@ export default function CheckIn() {
       telefono: formData.get("telefono"),
       email: formData.get("email"),
       direccion: formData.get("direccion"),
+      // Emergencia
       emergenciaNombre: formData.get("emergenciaNombre"),
       emergenciaParentesco: formData.get("emergenciaParentesco"),
       emergenciaTelefono: formData.get("emergenciaTelefono"),
       emergenciaTelefonoAlt: formData.get("emergenciaTelefonoAlt"),
+      // Observaciones y firmas
       observaciones: formData.get("observaciones"),
       firmaHuesped: firmaHuesped,
       firmaResponsable: firmaResponsable,
@@ -96,6 +100,7 @@ export default function CheckIn() {
 
         <form onSubmit={handleSave} className="space-y-8">
           
+          {/* SECCIÓN 1: ALOJAMIENTO */}
           <div>
             <h2 className="text-xl font-semibold text-blue-800 mb-4 flex items-center gap-2"><Calendar size={24}/> Datos del Alojamiento</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -137,6 +142,7 @@ export default function CheckIn() {
             </div>
           </div>
 
+          {/* SECCIÓN 2: DATOS PERSONALES */}
           <div>
             <h2 className="text-xl font-semibold text-blue-800 mb-4 flex items-center gap-2"><User size={24}/> Datos Personales</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -171,6 +177,7 @@ export default function CheckIn() {
             </div>
           </div>
 
+          {/* SECCIÓN 3: CONTACTO DE EMERGENCIA */}
           <div>
             <h2 className="text-xl font-semibold text-blue-800 mb-4 flex items-center gap-2"><Phone size={24}/> Contacto de Emergencia</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -193,6 +200,7 @@ export default function CheckIn() {
             </div>
           </div>
 
+          {/* SECCIÓN 4: OBSERVACIONES Y FIRMAS */}
           <div>
             <h2 className="text-xl font-semibold text-blue-800 mb-4 flex items-center gap-2"><Users size={24}/> Observaciones y Firmas</h2>
             <div className="mb-4">
