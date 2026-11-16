@@ -23,38 +23,40 @@ interface Huesped {
   estadoPago: string;
   fechaIngreso: string;
   fechaVencimiento: string;
-  firmaHuesped: string;
-  firmaResponsable: string;
+  firmaHuesped?: string;
+  firmaResponsable?: string;
+  estado?: string; // Agregado para el filtro
 }
 
+export default function ListaHuespedes() {
+  const [huespedes, setHuespedes] = useState<Huesped[]>([]);
+  const [cargando, setCargando] = useState(true);
+  
+  const [pagoModalAbierto, setPagoModalAbierto] = useState(false);
+  const [salidaModalAbierto, setSalidaModalAbierto] = useState(false);
+  const [huespedSeleccionado, setHuespedSeleccionado] = useState<Huesped | null>(null);
+  const [montoPago, setMontoPago] = useState("");
+
   useEffect(() => {
-    const unsubscribe = onSnapshot(
-      collection(db, "huespedes"), 
-      (snapshot) => {
-        // ESTO ES NUEVO: Nos dice cuántos documentos llegaron
-        alert("Documentos encontrados en Firebase: " + snapshot.size);
-        
-        const lista: Huesped[] = [];
-        snapshot.forEach((doc) => {
-          lista.push({ id: doc.id, ...doc.data() } as Huesped);
-        });
-        lista.sort((a, b) => (b.saldoPendiente || 0) - (a.saldoPendiente || 0));
-        setHuespedes(lista);
-        setCargando(false);
-      },
-      (error) => {
-        alert("Error de Firebase: " + error.message);
-        setCargando(false);
-      }
-    );
+    const unsubscribe = onSnapshot(collection(db, "huespedes"), (snapshot) => {
+      const lista: Huesped[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        // Solo mostramos si NO es Inactivo
+        if (data.estado !== "Inactivo") {
+          lista.push({ id: doc.id, ...data } as Huesped);
+        }
+      });
+      lista.sort((a, b) => (b.saldoPendiente || 0) - (a.saldoPendiente || 0));
+      setHuespedes(lista);
+      setCargando(false);
+    });
 
     return () => unsubscribe();
   }, []);
 
-  // Función para registrar un pago
   const handleRegistrarPago = async () => {
     if (!huespedSeleccionado) return;
-    
     const pago = Number(montoPago);
     if (pago <= 0) {
       alert("Ingrese un monto válido.");
@@ -85,10 +87,8 @@ interface Huesped {
     }
   };
 
-  // Función para dar salida al huésped
   const handleDarSalida = async () => {
     if (!huespedSeleccionado) return;
-
     try {
       const huespedRef = doc(db, "huespedes", huespedSeleccionado.id);
       await updateDoc(huespedRef, {
@@ -209,7 +209,6 @@ interface Huesped {
         )}
       </div>
 
-      {/* MODAL PARA REGISTRAR PAGO */}
       {pagoModalAbierto && huespedSeleccionado && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
@@ -242,7 +241,6 @@ interface Huesped {
         </div>
       )}
 
-      {/* MODAL PARA DAR SALIDA */}
       {salidaModalAbierto && huespedSeleccionado && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
