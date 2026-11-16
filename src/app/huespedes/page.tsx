@@ -37,13 +37,17 @@ export default function ListaHuespedes() {
   const [huespedSeleccionado, setHuespedSeleccionado] = useState<Huesped | null>(null);
   const [montoPago, setMontoPago] = useState("");
 
-    useEffect(() => {
-    const unsubscribe = onSnapshot(
+   useEffect(() => {
+    console.log("Iniciando escucha de Firebase...");
+    
+   const unsubscribe = onSnapshot(
       collection(db, "huespedes"), 
       (snapshot) => {
+        console.log("Snapshot recibido. Documentos:", snapshot.size);
         const lista: Huesped[] = [];
         snapshot.forEach((doc) => {
           const data = doc.data();
+          console.log("Documento:", doc.id, data.nombre);
           lista.push({ id: doc.id, ...data } as Huesped);
         });
         lista.sort((a, b) => (b.saldoPendiente || 0) - (a.saldoPendiente || 0));
@@ -51,15 +55,14 @@ export default function ListaHuespedes() {
         setCargando(false);
       },
       (error) => {
-        // ESTO ES LO NUEVO: Si hay un error, lo mostramos
-        console.error("Error de Firebase:", error);
-        alert("Error al cargar datos: " + error.message);
+        console.error("ERROR de Firebase:", error);
+        alert("Error: " + error.message);
         setCargando(false);
       }
     );
 
     return () => unsubscribe();
-  }, []);
+  }, []); 
 
   // Función para registrar un pago
   const handleRegistrarPago = async () => {
