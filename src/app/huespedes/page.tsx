@@ -37,20 +37,26 @@ export default function ListaHuespedes() {
   const [huespedSeleccionado, setHuespedSeleccionado] = useState<Huesped | null>(null);
   const [montoPago, setMontoPago] = useState("");
 
-  useEffect(() => {
-    // Escuchamos TODA la colección, sin filtros de Firebase (por ahora)
-    const unsubscribe = onSnapshot(collection(db, "huespedes"), (snapshot) => {
-      const lista: Huesped[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        // Mostramos todos para probar
-        lista.push({ id: doc.id, ...data } as Huesped);
-      });
-      // Ordenar por los que tienen saldo pendiente primero
-      lista.sort((a, b) => (b.saldoPendiente || 0) - (a.saldoPendiente || 0));
-      setHuespedes(lista);
-      setCargando(false);
-    });
+    useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, "huespedes"), 
+      (snapshot) => {
+        const lista: Huesped[] = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          lista.push({ id: doc.id, ...data } as Huesped);
+        });
+        lista.sort((a, b) => (b.saldoPendiente || 0) - (a.saldoPendiente || 0));
+        setHuespedes(lista);
+        setCargando(false);
+      },
+      (error) => {
+        // ESTO ES LO NUEVO: Si hay un error, lo mostramos
+        console.error("Error de Firebase:", error);
+        alert("Error al cargar datos: " + error.message);
+        setCargando(false);
+      }
+    );
 
     return () => unsubscribe();
   }, []);
