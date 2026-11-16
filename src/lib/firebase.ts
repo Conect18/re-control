@@ -15,3 +15,12 @@ const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+// src/lib/firebase.ts (al final)
+import { enableIndexedDbPersistence } from "firebase/firestore";
+
+// Habilitar persistencia (opcional, pero útil)
+if (typeof window !== "undefined") {
+  enableIndexedDbPersistence(db).catch((err) => {
+    console.log("Persistencia no habilitada:", err.code);
+  });
+}
