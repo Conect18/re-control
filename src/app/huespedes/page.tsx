@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { ArrowLeft, User, CreditCard, LogOut, Printer, X } from "lucide-react";
 import jsPDF from "jspdf";
@@ -15,7 +15,7 @@ interface Huesped {
   documento: string;
   habitacion: string;
   piso: string;
-  cama?: string; // El ? significa que es opcional
+  cama?: string;
   telefono: string;
   montoPagar: number;
   montoPagado: number;
@@ -31,13 +31,19 @@ export default function ListaHuespedes() {
   const [huespedes, setHuespedes] = useState<Huesped[]>([]);
   const [cargando, setCargando] = useState(true);
   
-  // Estados para el modal de pago
+  // Estados para modales
   const [pagoModalAbierto, setPagoModalAbierto] = useState(false);
+  const [salidaModalAbierto, setSalidaModalAbierto] = useState(false);
   const [huespedSeleccionado, setHuespedSeleccionado] = useState<Huesped | null>(null);
   const [montoPago, setMontoPago] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "huespedes"), (snapshot) => {
+    // Consulta para traer solo los huéspedes activos (que no tengan estado Inactivo)
+    // Nota: Los huéspedes viejos sin el campo 'estado' podrían no aparecer. 
+    // Si eso pasa, quita el 'where' y la 'query', y usa solo collection(db, "huespedes").
+    const q = query(collection(db, "huespedes"), where("estado", "!=", "Inactivo"));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const lista: Huesped[] = [];
       snapshot.forEach((doc) => {
         lista.push({ id: doc.id, ...doc.data() } as Huesped);
@@ -85,8 +91,25 @@ export default function ListaHuespedes() {
     }
   };
 
+  // Función para dar salida al huésped
+  const handleDarSalida = async () => {
+    if (!huespedSeleccionado) return;
+
+    try {
+      const huespedRef = doc(db, "huespedes", huespedSeleccionado.id);
+      await updateDoc(huespedRef, {
+        estado: "Inactivo",
+        fechaSalida: new Date().toISOString()
+      });
+      setSalidaModalAbierto(false);
+      alert("Huésped dado de salida con éxito. La habitación quedó libre.");
+    } catch (error) {
+      console.error("Error al dar salida:", error);
+      alert("Error al dar salida.");
+    }
+  };
+
   const handlePrint = async (huesped: Huesped) => {
-    // (El código de impresión se mantiene igual que antes)
     const printElement = document.createElement("div");
     printElement.innerHTML = `
       <div style="font-family: Arial, sans-serif; padding: 40px; color: #333; background: white; width: 800px;">
@@ -177,7 +200,11 @@ export default function ListaHuespedes() {
                     >
                       <CreditCard size={20} />
                     </button>
-                    <button className="bg-red-100 text-red-700 p-2 rounded-lg hover:bg-red-200 transition" title="Dar Salida">
+                    <button 
+                      onClick={() => { setHuespedSeleccionado(huesped); setSalidaModalAbierto(true); }} 
+                      className="bg-red-100 text-red-700 p-2 rounded-lg hover:bg-red-200 transition" 
+                      title="Dar Salida"
+                    >
                       <LogOut size={20} />
                     </button>
                   </div>
@@ -217,6 +244,37 @@ export default function ListaHuespedes() {
             >
               Confirmar Pago
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PARA DAR SALIDA */}
+      {salidaModalAbierto && huespedSeleccionado && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">Dar Salida</h2>
+              <button onClick={() => setSalidaModalAbierto(false)} className="text-gray-500 hover:text-gray-700">
+                <X size={24} />
+              </button>
+            </div>
+            <p className="text-gray-600 mb-6">
+              ¿Estás seguro que deseas dar salida a <strong>{huespedSeleccionado.nombre}</strong> de la habitación <strong>{huespedSeleccionado.habitacion}</strong>?
+            </p>
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setSalidaModalAbierto(false)}
+                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg hover:bg-gray-300 transition"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleDarSalida}
+                className="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 transition"
+              >
+                Confirmar Salida
+              </button>
+            </div>
           </div>
         </div>
       )}
