@@ -15,6 +15,7 @@ interface Huesped {
   documento: string;
   habitacion: string;
   piso: string;
+  cama?: string; // El ? significa que es opcional
   telefono: string;
   montoPagar: number;
   montoPagado: number;
