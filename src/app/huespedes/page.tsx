@@ -37,45 +37,19 @@ export default function ListaHuespedes() {
   const [huespedSeleccionado, setHuespedSeleccionado] = useState<Huesped | null>(null);
   const [montoPago, setMontoPago] = useState("");
 
-    useEffect(() => {
-    // PRUEBA: Datos falsos en lugar de Firebase
-    const listaPrueba: Huesped[] = [
-      {
-        id: "1",
-        nombre: "Prueba 1",
-        documento: "12345678",
-        habitacion: "1",
-        piso: "1",
-        telefono: "099111222",
-        montoPagar: 10000,
-        montoPagado: 5000,
-        saldoPendiente: 5000,
-        estadoPago: "Parcial",
-        fechaIngreso: new Date().toISOString(),
-        fechaVencimiento: "2026-12-01",
-        firmaHuesped: "",
-        firmaResponsable: ""
-      },
-      {
-        id: "2",
-        nombre: "Prueba 2",
-        documento: "87654321",
-        habitacion: "2",
-        piso: "2",
-        telefono: "099333444",
-        montoPagar: 8000,
-        montoPagado: 8000,
-        saldoPendiente: 0,
-        estadoPago: "Pagado",
-        fechaIngreso: new Date().toISOString(),
-        fechaVencimiento: "2026-12-01",
-        firmaHuesped: "",
-        firmaResponsable: ""
-      }
-    ];
+      useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "huespedes"), (snapshot) => {
+      const lista: Huesped[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        lista.push({ id: doc.id, ...data } as Huesped);
+      });
+      lista.sort((a, b) => (b.saldoPendiente || 0) - (a.saldoPendiente || 0));
+      setHuespedes(lista);
+      setCargando(false);
+    });
 
-    setHuespedes(listaPrueba);
-    setCargando(false);
+    return () => unsubscribe();
   }, []);
 
   // Función para registrar un pago
