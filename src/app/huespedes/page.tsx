@@ -27,27 +27,26 @@ interface Huesped {
   firmaResponsable: string;
 }
 
-export default function ListaHuespedes() {
-  const [huespedes, setHuespedes] = useState<Huesped[]>([]);
-  const [cargando, setCargando] = useState(true);
-  
-  // Estados para modales
-  const [pagoModalAbierto, setPagoModalAbierto] = useState(false);
-  const [salidaModalAbierto, setSalidaModalAbierto] = useState(false);
-  const [huespedSeleccionado, setHuespedSeleccionado] = useState<Huesped | null>(null);
-  const [montoPago, setMontoPago] = useState("");
-
-      useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "huespedes"), (snapshot) => {
-      const lista: Huesped[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        lista.push({ id: doc.id, ...data } as Huesped);
-      });
-      lista.sort((a, b) => (b.saldoPendiente || 0) - (a.saldoPendiente || 0));
-      setHuespedes(lista);
-      setCargando(false);
-    });
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, "huespedes"), 
+      (snapshot) => {
+        // ESTO ES NUEVO: Nos dice cuántos documentos llegaron
+        alert("Documentos encontrados en Firebase: " + snapshot.size);
+        
+        const lista: Huesped[] = [];
+        snapshot.forEach((doc) => {
+          lista.push({ id: doc.id, ...doc.data() } as Huesped);
+        });
+        lista.sort((a, b) => (b.saldoPendiente || 0) - (a.saldoPendiente || 0));
+        setHuespedes(lista);
+        setCargando(false);
+      },
+      (error) => {
+        alert("Error de Firebase: " + error.message);
+        setCargando(false);
+      }
+    );
 
     return () => unsubscribe();
   }, []);
