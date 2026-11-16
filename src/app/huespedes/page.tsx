@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { collection, onSnapshot, doc, updateDoc, query, where } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { ArrowLeft, User, CreditCard, LogOut, Printer, X } from "lucide-react";
 import jsPDF from "jspdf";
@@ -38,15 +38,15 @@ export default function ListaHuespedes() {
   const [montoPago, setMontoPago] = useState("");
 
   useEffect(() => {
-    // Consulta para traer solo los huéspedes activos (que no tengan estado Inactivo)
-    // Nota: Los huéspedes viejos sin el campo 'estado' podrían no aparecer. 
-    // Si eso pasa, quita el 'where' y la 'query', y usa solo collection(db, "huespedes").
-    const q = query(collection(db, "huespedes"), where("estado", "!=", "Inactivo"));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    // Escuchamos TODA la colección, sin filtros de Firebase
+    const unsubscribe = onSnapshot(collection(db, "huespedes"), (snapshot) => {
       const lista: Huesped[] = [];
       snapshot.forEach((doc) => {
-        lista.push({ id: doc.id, ...doc.data() } as Huesped);
+        const data = doc.data();
+        // Filtramos en el frontend: solo mostramos si NO es Inactivo
+        if (data.estado !== "Inactivo") {
+          lista.push({ id: doc.id, ...data } as Huesped);
+        }
       });
       // Ordenar por los que tienen saldo pendiente primero
       lista.sort((a, b) => (b.saldoPendiente || 0) - (a.saldoPendiente || 0));
