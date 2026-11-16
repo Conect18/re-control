@@ -38,15 +38,13 @@ export default function ListaHuespedes() {
   const [montoPago, setMontoPago] = useState("");
 
   useEffect(() => {
-    // Escuchamos TODA la colección, sin filtros de Firebase
+    // Escuchamos TODA la colección, sin filtros de Firebase (por ahora)
     const unsubscribe = onSnapshot(collection(db, "huespedes"), (snapshot) => {
       const lista: Huesped[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        // Filtramos en el frontend: solo mostramos si NO es Inactivo
-        if (data.estado !== "Inactivo") {
-          lista.push({ id: doc.id, ...data } as Huesped);
-        }
+        // Mostramos todos para probar
+        lista.push({ id: doc.id, ...data } as Huesped);
       });
       // Ordenar por los que tienen saldo pendiente primero
       lista.sort((a, b) => (b.saldoPendiente || 0) - (a.saldoPendiente || 0));
@@ -102,7 +100,7 @@ export default function ListaHuespedes() {
         fechaSalida: new Date().toISOString()
       });
       setSalidaModalAbierto(false);
-      alert("Huésped dado de salida con éxito. La habitación quedó libre.");
+      alert("Huésped dado de salida con éxito.");
     } catch (error) {
       console.error("Error al dar salida:", error);
       alert("Error al dar salida.");
@@ -259,7 +257,7 @@ export default function ListaHuespedes() {
               </button>
             </div>
             <p className="text-gray-600 mb-6">
-              ¿Estás seguro que deseas dar salida a <strong>{huespedSeleccionado.nombre}</strong> de la habitación <strong>{huespedSeleccionado.habitacion}</strong>?
+              ¿Estás seguro que deseas dar salida a <strong>{huespedSeleccionado.nombre}</strong>?
             </p>
             <div className="flex gap-4">
               <button 
