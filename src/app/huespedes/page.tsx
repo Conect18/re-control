@@ -25,7 +25,17 @@ interface Huesped {
   fechaVencimiento: string;
   firmaHuesped?: string;
   firmaResponsable?: string;
-  estado?: string; // Agregado para el filtro
+  estado?: string;
+  // Campos nuevos agregados para que no de error en el PDF:
+  nacionalidad?: string;
+  fechaNacimiento?: string;
+  email?: string;
+  direccion?: string;
+  emergenciaNombre?: string;
+  emergenciaParentesco?: string;
+  emergenciaTelefono?: string;
+  emergenciaTelefonoAlt?: string;
+  observaciones?: string;
 }
 
 export default function ListaHuespedes() {
@@ -42,7 +52,6 @@ export default function ListaHuespedes() {
       const lista: Huesped[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        // Solo mostramos si NO es Inactivo
         if (data.estado !== "Inactivo") {
           lista.push({ id: doc.id, ...data } as Huesped);
         }
@@ -106,26 +115,87 @@ export default function ListaHuespedes() {
   const handlePrint = async (huesped: Huesped) => {
     const printElement = document.createElement("div");
     printElement.innerHTML = `
-      <div style="font-family: Arial, sans-serif; padding: 40px; color: #333; background: white; width: 800px;">
-        <h1 style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; font-size: 24px;">CONTROL DE HUÉSPEDES - RESIDENCIA TACUAREMBÓ</h1>
-        <h2 style="text-align: center; font-size: 18px; margin-bottom: 30px;">FICHA INDIVIDUAL DEL HUÉSPED</h2>
-        <h3 style="background: #eee; padding: 8px; font-size: 16px; margin-top: 20px;">Datos del Alojamiento</h3>
-        <p><strong>Piso:</strong> ${huesped.piso || '-'} | <strong>Habitación:</strong> ${huesped.habitacion} | <strong>Cama:</strong> ${huesped.cama || '-'}</p>
-        <p><strong>Monto Total:</strong> $${huesped.montoPagar} | <strong>Pagado:</strong> $${huesped.montoPagado || 0} | <strong>Saldo:</strong> $${huesped.saldoPendiente}</p>
-        <p><strong>Estado:</strong> ${huesped.estadoPago}</p>
-        <p><strong>Fecha Vencimiento:</strong> ${huesped.fechaVencimiento || '-'}</p>
-        <h3 style="background: #eee; padding: 8px; font-size: 16px; margin-top: 20px;">Datos Personales</h3>
-        <p><strong>Nombre:</strong> ${huesped.nombre} | <strong>Documento:</strong> ${huesped.documento}</p>
-        <p><strong>Teléfono:</strong> ${huesped.telefono}</p>
+      <div style="font-family: Arial, sans-serif; padding: 40px; color: #333; background: white; width: 800px; font-size: 14px;">
+        
+        <h1 style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; font-size: 22px; margin-bottom: 5px;">
+          CONTROL DE HUÉSPEDES - RESIDENCIA TACUAREMBÓ
+        </h1>
+        <h2 style="text-align: center; font-size: 16px; margin-bottom: 30px; font-weight: normal;">
+          FICHA INDIVIDUAL DEL HUÉSPED
+        </h2>
+
+        <!-- DATOS DEL ALOJAMIENTO -->
+        <h3 style="background: #eee; padding: 6px; font-size: 14px; margin-top: 20px; border: 1px solid #ccc;">Datos del Alojamiento</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+          <tr>
+            <td style="padding: 5px;"><strong>Piso:</strong> ${huesped.piso || '-'}</td>
+            <td style="padding: 5px;"><strong>Nº Habitación:</strong> ${huesped.habitacion || '-'}</td>
+            <td style="padding: 5px;"><strong>Nº Cama:</strong> ${huesped.cama || '-'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px;"><strong>Fecha Ingreso:</strong> ${new Date(huesped.fechaIngreso).toLocaleDateString()}</td>
+            <td style="padding: 5px;"><strong>Vencimiento:</strong> ${huesped.fechaVencimiento || '-'}</td>
+            <td style="padding: 5px;"><strong>Estado Pago:</strong> ${huesped.estadoPago || '-'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px;"><strong>Monto Total:</strong> $${huesped.montoPagar}</td>
+            <td style="padding: 5px;"><strong>Monto Pagado:</strong> $${huesped.montoPagado || 0}</td>
+            <td style="padding: 5px;"><strong>Saldo Pendiente:</strong> <span style="color: ${huesped.saldoPendiente > 0 ? 'red' : 'green'};">$${huesped.saldoPendiente}</span></td>
+          </tr>
+        </table>
+
+        <!-- DATOS PERSONALES -->
+        <h3 style="background: #eee; padding: 6px; font-size: 14px; margin-top: 20px; border: 1px solid #ccc;">Datos Personales</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+          <tr>
+            <td style="padding: 5px;" colspan="2"><strong>Nombre y Apellidos:</strong> ${huesped.nombre}</td>
+            <td style="padding: 5px;"><strong>Documento:</strong> ${huesped.documento}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px;"><strong>Nacionalidad:</strong> ${huesped.nacionalidad || '-'}</td>
+            <td style="padding: 5px;"><strong>Fecha Nacimiento:</strong> ${huesped.fechaNacimiento || '-'}</td>
+            <td style="padding: 5px;"><strong>Teléfono:</strong> ${huesped.telefono}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px;" colspan="2"><strong>Correo:</strong> ${huesped.email || '-'}</td>
+            <td style="padding: 5px;"><strong>Dirección:</strong> ${huesped.direccion || '-'}</td>
+          </tr>
+        </table>
+
+        <!-- CONTACTO DE EMERGENCIA -->
+        <h3 style="background: #eee; padding: 6px; font-size: 14px; margin-top: 20px; border: 1px solid #ccc;">Contacto de Emergencia</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+          <tr>
+            <td style="padding: 5px;"><strong>Nombre:</strong> ${huesped.emergenciaNombre || '-'}</td>
+            <td style="padding: 5px;"><strong>Parentesco:</strong> ${huesped.emergenciaParentesco || '-'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px;"><strong>Teléfono Principal:</strong> ${huesped.emergenciaTelefono || '-'}</td>
+            <td style="padding: 5px;"><strong>Teléfono Alternativo:</strong> ${huesped.emergenciaTelefonoAlt || '-'}</td>
+          </tr>
+        </table>
+
+        <!-- OBSERVACIONES -->
+        <h3 style="background: #eee; padding: 6px; font-size: 14px; margin-top: 20px; border: 1px solid #ccc;">Observaciones</h3>
+        <div style="min-height: 50px; border: 1px solid #ccc; padding: 10px; margin-bottom: 30px;">
+          ${huesped.observaciones || 'Sin observaciones.'}
+        </div>
+
+        <!-- FIRMAS -->
         <div style="margin-top: 50px; display: flex; justify-content: space-between;">
           <div style="text-align: center; width: 45%;">
-            <p>Firma del Huésped:</p>
-            ${huesped.firmaHuesped ? `<img src="${huesped.firmaHuesped}" style="max-width: 100%; border-bottom: 1px solid #333;" />` : '<p>Sin firma</p>'}
+            <p style="margin-bottom: 5px;">Firma del Huésped:</p>
+            ${huesped.firmaHuesped ? `<img src="${huesped.firmaHuesped}" style="max-width: 90%; height: 80px; object-fit: contain; border-bottom: 1px solid #333;" />` : '<p style="border-bottom: 1px solid #333; height: 80px;">Sin firma</p>'}
+            <p style="margin-top: 5px; font-size: 12px;">Aclaración: ${huesped.nombre}</p>
           </div>
           <div style="text-align: center; width: 45%;">
-            <p>Firma del Responsable:</p>
-            ${huesped.firmaResponsable ? `<img src="${huesped.firmaResponsable}" style="max-width: 100%; border-bottom: 1px solid #333;" />` : '<p>Sin firma</p>'}
+            <p style="margin-bottom: 5px;">Firma del Responsable:</p>
+            ${huesped.firmaResponsable ? `<img src="${huesped.firmaResponsable}" style="max-width: 90%; height: 80px; object-fit: contain; border-bottom: 1px solid #333;" />` : '<p style="border-bottom: 1px solid #333; height: 80px;">Sin firma</p>'}
           </div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: right; font-size: 12px; color: #666;">
+          Fecha de impresión: ${new Date().toLocaleDateString()}
         </div>
       </div>
     `;
@@ -141,6 +211,7 @@ export default function ListaHuespedes() {
       window.open(pdf.output("bloburl"), "_blank");
     } catch (error) {
       console.error("Error al generar PDF", error);
+      alert("Hubo un error al generar el PDF.");
     } finally {
       document.body.removeChild(printElement);
     }
