@@ -61,6 +61,7 @@ export default function CheckIn() {
       firmaHuesped: firmaHuesped,
       firmaResponsable: firmaResponsable,
       creadoPor: "Encargado", 
+      estado: "Activo",
     };
 
     try {
