@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { ArrowLeft, User, CreditCard, LogOut, Printer, X } from "lucide-react";
+import { ArrowLeft, User, CreditCard, LogOut, Printer, X, Search } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -26,7 +26,6 @@ interface Huesped {
   firmaHuesped?: string;
   firmaResponsable?: string;
   estado?: string;
-  // Campos nuevos agregados para que no de error en el PDF:
   nacionalidad?: string;
   fechaNacimiento?: string;
   email?: string;
@@ -42,10 +41,14 @@ export default function ListaHuespedes() {
   const [huespedes, setHuespedes] = useState<Huesped[]>([]);
   const [cargando, setCargando] = useState(true);
   
+  // Estados para modales
   const [pagoModalAbierto, setPagoModalAbierto] = useState(false);
   const [salidaModalAbierto, setSalidaModalAbierto] = useState(false);
   const [huespedSeleccionado, setHuespedSeleccionado] = useState<Huesped | null>(null);
   const [montoPago, setMontoPago] = useState("");
+  
+  // Estado para el buscador
+  const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "huespedes"), (snapshot) => {
@@ -124,7 +127,6 @@ export default function ListaHuespedes() {
           FICHA INDIVIDUAL DEL HUÉSPED
         </h2>
 
-        <!-- DATOS DEL ALOJAMIENTO -->
         <h3 style="background: #eee; padding: 6px; font-size: 14px; margin-top: 20px; border: 1px solid #ccc;">Datos del Alojamiento</h3>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
           <tr>
@@ -144,7 +146,6 @@ export default function ListaHuespedes() {
           </tr>
         </table>
 
-        <!-- DATOS PERSONALES -->
         <h3 style="background: #eee; padding: 6px; font-size: 14px; margin-top: 20px; border: 1px solid #ccc;">Datos Personales</h3>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
           <tr>
@@ -162,7 +163,6 @@ export default function ListaHuespedes() {
           </tr>
         </table>
 
-        <!-- CONTACTO DE EMERGENCIA -->
         <h3 style="background: #eee; padding: 6px; font-size: 14px; margin-top: 20px; border: 1px solid #ccc;">Contacto de Emergencia</h3>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
           <tr>
@@ -175,13 +175,11 @@ export default function ListaHuespedes() {
           </tr>
         </table>
 
-        <!-- OBSERVACIONES -->
         <h3 style="background: #eee; padding: 6px; font-size: 14px; margin-top: 20px; border: 1px solid #ccc;">Observaciones</h3>
         <div style="min-height: 50px; border: 1px solid #ccc; padding: 10px; margin-bottom: 30px;">
           ${huesped.observaciones || 'Sin observaciones.'}
         </div>
 
-        <!-- FIRMAS -->
         <div style="margin-top: 50px; display: flex; justify-content: space-between;">
           <div style="text-align: center; width: 45%;">
             <p style="margin-bottom: 5px;">Firma del Huésped:</p>
@@ -217,6 +215,15 @@ export default function ListaHuespedes() {
     }
   };
 
+  // Filtramos la lista de huéspedes según la búsqueda
+  const huespedesFiltrados = huespedes.filter((h) => {
+    const busquedaLower = busqueda.toLowerCase();
+    return (
+      h.nombre.toLowerCase().includes(busquedaLower) ||
+      h.documento.includes(busqueda)
+    );
+  });
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-5xl mx-auto">
@@ -227,16 +234,33 @@ export default function ListaHuespedes() {
           <h1 className="text-3xl font-bold text-gray-800">Huéspedes Actuales</h1>
         </div>
 
+        {/* BARRA DE BÚSQUEDA */}
+        <div className="mb-6 relative">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="text-gray-400" size={24} />
+          </div>
+          <input 
+            type="text" 
+            placeholder="Buscar por nombre o Cédula..." 
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="w-full p-4 pl-12 text-lg border-2 border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+          />
+        </div>
+
         {cargando ? (
           <div className="text-center py-10 text-xl text-gray-500">Cargando lista...</div>
-        ) : huespedes.length === 0 ? (
+        ) : huespedesFiltrados.length === 0 ? (
           <div className="bg-white p-10 rounded-xl shadow text-center">
             <User size={64} className="mx-auto text-gray-300 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-700 mb-2">No hay huéspedes registrados</h2>
+            <h2 className="text-2xl font-bold text-gray-700 mb-2">
+              {busqueda ? "No se encontraron resultados" : "No hay huéspedes registrados"}
+            </h2>
+            {busqueda && <p className="text-gray-500">Intenta buscar con otro nombre o Cédula.</p>}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {huespedes.map((huesped) => (
+            {huespedesFiltrados.map((huesped) => (
               <div key={huesped.id} className={`bg-white rounded-xl shadow-md p-6 border-l-4 ${huesped.saldoPendiente > 0 ? 'border-red-500' : 'border-green-500'} flex flex-col justify-between`}>
                 <div>
                   <div className="flex justify-between items-start mb-2">
@@ -280,6 +304,7 @@ export default function ListaHuespedes() {
         )}
       </div>
 
+      {/* MODAL PARA REGISTRAR PAGO */}
       {pagoModalAbierto && huespedSeleccionado && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
@@ -312,6 +337,7 @@ export default function ListaHuespedes() {
         </div>
       )}
 
+      {/* MODAL PARA DAR SALIDA */}
       {salidaModalAbierto && huespedSeleccionado && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
