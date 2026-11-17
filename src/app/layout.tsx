@@ -1,6 +1,7 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/AuthProvider";
+import Footer from "@/components/Footer"; // <--- Importamos el Footer
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,10 +16,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+      <body className="flex flex-col min-h-screen">
+        <div className="flex-grow">
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </div>
+        <Footer /> {/* <--- Agregamos el Footer aquí */}
       </body>
     </html>
   );

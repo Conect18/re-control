@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { ArrowLeft, User, CreditCard, LogOut, Printer, X, Search, CalendarClock } from "lucide-react";
+import { ArrowLeft, User, CreditCard, LogOut, Printer, X, Search, CalendarClock, Download } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -111,6 +111,47 @@ export default function ListaHuespedes() {
       console.error("Error al dar salida:", error);
       alert("Error al dar salida.");
     }
+  };
+
+  // FUNCIÓN PARA EXPORTAR A EXCEL (CSV)
+  const handleExportExcel = () => {
+    if (huespedesFiltrados.length === 0) {
+      alert("No hay datos para exportar.");
+      return;
+    }
+
+    const headers = ["Nombre", "Documento", "Piso", "Habitacion", "Cama", "Telefono", "Monto Total", "Monto Pagado", "Saldo Pendiente", "Estado Pago", "Fecha Vencimiento"];
+    
+    // Usamos punto y coma (;) como separador, que es el estándar para Excel en español
+    const rows = huespedesFiltrados.map(h => [
+      `"${h.nombre || ''}"`, 
+      `"${h.documento || ''}"`, 
+      `"${h.piso || ''}"`, 
+      `"${h.habitacion || ''}"`, 
+      `"${h.cama || ''}"`, 
+      `"${h.telefono || ''}"`, 
+      h.montoPagar || 0, 
+      h.montoPagado || 0, 
+      h.saldoPendiente || 0, 
+      `"${h.estadoPago || ''}"`, 
+      `"${h.fechaVencimiento || ''}"`
+    ]);
+
+    // \uFEFF es el BOM (Byte Order Mark) para que Excel reconozca los acentos (tildes y ñ)
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
+    csvContent += headers.join(";") + "\n";
+    rows.forEach(row => {
+      csvContent += row.join(";") + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    const fecha = new Date().toLocaleDateString('es-UY').replace(/\//g, '-');
+    link.setAttribute("download", `Huespedes_Residencia_${fecha}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handlePrint = async (huesped: Huesped) => {
@@ -224,11 +265,21 @@ export default function ListaHuespedes() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-5xl mx-auto">
-        <div className="flex items-center mb-6">
-          <Link href="/" className="flex items-center text-blue-600 hover:text-blue-800 font-semibold mr-6">
-            <ArrowLeft size={20} className="mr-2" /> Volver
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-800">Huéspedes Actuales</h1>
+        
+        {/* HEADER CON BOTÓN DE EXPORTAR */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center text-blue-600 hover:text-blue-800 font-semibold mr-6">
+              <ArrowLeft size={20} className="mr-2" /> Volver
+            </Link>
+            <h1 className="text-3xl font-bold text-gray-800">Huéspedes Actuales</h1>
+          </div>
+          <button 
+            onClick={handleExportExcel} 
+            className="bg-green-600 text-white px-5 py-3 rounded-xl font-bold hover:bg-green-700 transition flex items-center gap-2 shadow-md w-full md:w-auto justify-center"
+          >
+            <Download size={20} /> Exportar a Excel
+          </button>
         </div>
 
         <div className="mb-6 relative">
@@ -267,7 +318,6 @@ export default function ListaHuespedes() {
                   </div>
                   <p className="text-gray-600 text-sm mb-1"><strong>Doc:</strong> {huesped.documento}</p>
                   <p className="text-gray-600 text-sm mb-1"><strong>Tel:</strong> {huesped.telefono}</p>
-                  {/* NUEVA LÍNEA PARA LA FECHA DE VENCIMIENTO */}
                   <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
                     <CalendarClock size={16} className="text-gray-400" />
                     <strong>Vence:</strong> {huesped.fechaVencimiento ? huesped.fechaVencimiento.split('-').reverse().join('/') : 'No definida'}
