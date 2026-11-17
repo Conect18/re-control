@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { ArrowLeft, User, CreditCard, LogOut, Printer, X, Search } from "lucide-react";
+import { ArrowLeft, User, CreditCard, LogOut, Printer, X, Search, CalendarClock } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -41,13 +41,11 @@ export default function ListaHuespedes() {
   const [huespedes, setHuespedes] = useState<Huesped[]>([]);
   const [cargando, setCargando] = useState(true);
   
-  // Estados para modales
   const [pagoModalAbierto, setPagoModalAbierto] = useState(false);
   const [salidaModalAbierto, setSalidaModalAbierto] = useState(false);
   const [huespedSeleccionado, setHuespedSeleccionado] = useState<Huesped | null>(null);
   const [montoPago, setMontoPago] = useState("");
   
-  // Estado para el buscador
   const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
@@ -215,7 +213,6 @@ export default function ListaHuespedes() {
     }
   };
 
-  // Filtramos la lista de huéspedes según la búsqueda
   const huespedesFiltrados = huespedes.filter((h) => {
     const busquedaLower = busqueda.toLowerCase();
     return (
@@ -234,7 +231,6 @@ export default function ListaHuespedes() {
           <h1 className="text-3xl font-bold text-gray-800">Huéspedes Actuales</h1>
         </div>
 
-        {/* BARRA DE BÚSQUEDA */}
         <div className="mb-6 relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search className="text-gray-400" size={24} />
@@ -270,7 +266,12 @@ export default function ListaHuespedes() {
                     </span>
                   </div>
                   <p className="text-gray-600 text-sm mb-1"><strong>Doc:</strong> {huesped.documento}</p>
-                  <p className="text-gray-600 text-sm mb-3"><strong>Tel:</strong> {huesped.telefono}</p>
+                  <p className="text-gray-600 text-sm mb-1"><strong>Tel:</strong> {huesped.telefono}</p>
+                  {/* NUEVA LÍNEA PARA LA FECHA DE VENCIMIENTO */}
+                  <p className="text-gray-600 text-sm mb-3 flex items-center gap-1">
+                    <CalendarClock size={16} className="text-gray-400" />
+                    <strong>Vence:</strong> {huesped.fechaVencimiento ? huesped.fechaVencimiento.split('-').reverse().join('/') : 'No definida'}
+                  </p>
                 </div>
                 
                 <div className="border-t pt-4 mt-2 flex justify-between items-center">
@@ -304,7 +305,6 @@ export default function ListaHuespedes() {
         )}
       </div>
 
-      {/* MODAL PARA REGISTRAR PAGO */}
       {pagoModalAbierto && huespedSeleccionado && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
@@ -337,7 +337,6 @@ export default function ListaHuespedes() {
         </div>
       )}
 
-      {/* MODAL PARA DAR SALIDA */}
       {salidaModalAbierto && huespedSeleccionado && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
